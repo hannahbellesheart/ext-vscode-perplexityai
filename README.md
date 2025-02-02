@@ -10,7 +10,8 @@ Integrate Perplexity AI's API directly into VS Code with real-time chat capabili
 - **Citation tracking** for AI responses 
 - **Error handling** with user notifications 
 - **Dark theme** matching VS Code aesthetics   
-## Install dependencies:
+## Installation:
+I would suggest installing it from the "marketplace", but if you'd like to manually install it, please follow the below steps
 ```
 npm install
 ```
