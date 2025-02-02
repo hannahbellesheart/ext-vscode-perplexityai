@@ -128,6 +128,8 @@ export default function getWebviewContent(webview: vscode.Webview): string {
             }
 
             #sources {
+                overflow: auto; 
+                max-height: 20dvh; 
                 margin-top: 15px;
                 border-top: 1px solid var(--vscode-editorWidget-border);
                 padding-top: 10px;
@@ -157,7 +159,7 @@ export default function getWebviewContent(webview: vscode.Webview): string {
     </head>
     <body>
     <div class="navbar">  
-        <h1> Perplexity AI </h1>
+        <div style="font-size: 32px; font-weight: 400"> Perplexity AI </div>
         <select name="Model" id="model-selector" required>
             <option value="sonar">Sonar</option>
             <option value="sonar-pro">Sonar-Pro</option>
