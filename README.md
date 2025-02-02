@@ -17,7 +17,12 @@ I would suggest installing it from the "marketplace", but if you'd like to manua
 
 ```
 npm install
+vsce package
 ```
+
+After the above is completed, a vsix file should be generated in the root directory of this repository. 
+Please install the vsix file by following the steps outlined [here](https://code.visualstudio.com/docs/editor/extension-marketplace).  
+
 
 ## Set API key
 
