@@ -52,7 +52,7 @@ export default function getWebviewContent(webview: vscode.Webview): string {
                 border: 1px solid var(--vscode-editorWidget-border);
                 border-radius: 4px;
                 padding: 15px;
-                min-height: 100px;
+                min-height: 450px;
             }
     
             .input-container {
@@ -193,11 +193,22 @@ export default function getWebviewContent(webview: vscode.Webview): string {
 
         // Handle Enter key (Shift+Enter for newline)
         input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
+            if (e.key === 'Enter') {
+                if (e.shiftKey) {
+                    // Handle Shift+Enter by adding a new line
+                    e.preventDefault();
+                    input.value += '\n';
+                    // Move cursor to the bottom of the textarea
+                    input.scrollTop = input.scrollHeight;
+                } else {
+                    // Handle regular Enter to send message
+                    e.preventDefault();
+                    responseText.textContent += "## " + input.value;
+                    sendMessage();
+                }
             }
         });
+
 
         // Send message to extension
 
