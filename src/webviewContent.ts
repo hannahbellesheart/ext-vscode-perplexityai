@@ -193,22 +193,16 @@ export default function getWebviewContent(webview: vscode.Webview): string {
 
         // Handle Enter key (Shift+Enter for newline)
         input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                if (e.shiftKey) {
-                    // Handle Shift+Enter by adding a new line
-                    e.preventDefault();
-                    input.value += '\n';
-                    // Move cursor to the bottom of the textarea
-                    input.scrollTop = input.scrollHeight;
-                } else {
-                    // Handle regular Enter to send message
-                    e.preventDefault();
-                    responseText.textContent += "## " + input.value;
-                    sendMessage();
-                }
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                responseText.textContent += "<br />"; 
+                responseText.textContent += "$ ***" + input.value + "***";
+                responseText.textContent += "<br />";                 
+                responseText.textContent += "---------------------------------"
+                responseText.textContent += "<br /><br />"; 
+                sendMessage();
             }
         });
-
 
         // Send message to extension
 
