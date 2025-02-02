@@ -52,10 +52,9 @@
     "typescript": "^5.7.2"
   },
   "repository": {
-  "type": "git",
-  "url": "git://github.com/gabrielhutu/perplexity-ext.git"
+    "type": "git",
+    "url": "git://github.com/gabrielhutu/perplexity-ext.git"
   },
-
   "dependencies": {
     "vsce": "^2.15.0",
     "vscode-test": "^1.6.1"
