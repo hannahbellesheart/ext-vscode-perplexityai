@@ -1,0 +1,19 @@
+POST https://api.perplexity.ai/chat/completions 
+Accept: application/json
+Content-type: application/json
+Authorization: Bearer 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
+
+{
+  "model": "sonar-reasoning",
+  "messages": [
+    {
+      "role": "system",
+      "content": "Provide as much detail as you think it's needed"
+    },
+    {
+      "role": "user",
+      "content": "Why are flamingos pink?"
+    }
+  ], 
+  "stream": "true"
+}
