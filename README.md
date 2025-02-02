@@ -16,8 +16,8 @@ Integrate Perplexity AI's API directly into VS Code with real-time chat capabili
 I would suggest installing it from the "marketplace", but if you'd like to manually install it, please follow the below steps
 
 ```
-npm install
-vsce package
+npm install 
+npx @vscode/vsce packge
 ```
 
 After the above is completed, a vsix file should be generated in the root directory of this repository. 
@@ -76,3 +76,4 @@ Below is the only current command that allows configuration, which is essentiall
 
 - Add menu to select what files should be included in context
 - If possible, add counter for tokens to allow the end user to see how many tokens left.
+- Add chat history context 
