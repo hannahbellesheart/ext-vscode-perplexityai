@@ -12,13 +12,14 @@ interface PerplexityRequest {
 
 export default async function sendMessageToPerplexity(
 	message: string,
+	model: string, 
 	apiKey: string,
 	sendContentToInnerWebView: Function
 ) {
 
 	// request body for Perplexity
 	const requestBody: PerplexityRequest = {
-		model: "sonar-reasoning",
+		model: model,
 		messages: [
 			{
 				role: "system",
@@ -53,12 +54,19 @@ export default async function sendMessageToPerplexity(
         }
 
 		const reader: any = response.body?.getReader();
-		const decoder = new TextDecoder();
+		const decoder: any = new TextDecoder();
+		let listOfSources: string[] = []; 
 		let buffer = '';
 
 		while (true) {
 			const { done, value } = await reader.read();
             if(done){ 
+				await listOfSources.forEach(source => {
+					sendContentToInnerWebView({
+						command: 'source',
+						content: source
+					});
+				});
                 sendContentToInnerWebView({ command: 'complete' });
                 return; 
             }
@@ -79,6 +87,7 @@ export default async function sendMessageToPerplexity(
 					try {
 						const data = JSON.parse(jsonStr);
 						const chunk = data.choices[0]?.delta?.content || '';
+						listOfSources = data.citations; 
                         console.log(chunk);
 						if (chunk) {
 							sendContentToInnerWebView({
@@ -99,6 +108,7 @@ export default async function sendMessageToPerplexity(
 				}
 			}
 		}
+		
 
 
 
