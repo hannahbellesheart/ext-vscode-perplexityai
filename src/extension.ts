@@ -24,6 +24,9 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 	const disposableChatWindow = vscode.commands.registerCommand('perplexity-ext.openChatWindow', async () => {
+
+		let model = "sonar"; 
+
 		const panel = vscode.window.createWebviewPanel(
 			'perplexity',
 			'Perplexity Chat',
@@ -39,6 +42,7 @@ export function activate(context: vscode.ExtensionContext) {
 		const apiKey = await context.secrets.get("perplexity-ext.apiKey");
 
 
+
 		// If the rendered page is sending a message, we check what type of message it is (In this case it can only be "submit") so we go ahead and call sendMessageToPerplexity in order to get the response from the API. 
 		panel.webview.onDidReceiveMessage(async message => {
 			if (!apiKey) {
@@ -47,14 +51,18 @@ export function activate(context: vscode.ExtensionContext) {
 				switch (message.command) {
 					case 'submit':
 						try {
-							await sendMessageToPerplexity(message.text, apiKey, panel.webview.postMessage.bind(panel.webview));
+							await sendMessageToPerplexity(message.text, model, apiKey, panel.webview.postMessage.bind(panel.webview));
 						} catch (error) {
 							panel.webview.postMessage({
 								command: 'error',
 								error: (error as Error).message
 							});
 						}
-
+						break; 
+					case "selectModel": 
+						console.log("Selecting model: " + message.content); 
+						model = message.content; 
+						break; 
 				}
 			}
 		}, undefined, context.subscriptions);

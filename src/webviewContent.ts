@@ -20,18 +20,25 @@ export default function getWebviewContent(webview: vscode.Webview): string {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta http-equiv="Content-Security-Policy" 
-              content="default-src 'none'; 
-                      style-src ${webview.cspSource} 'unsafe-inline'; 
-                      script-src 'nonce-${nonce}';">
+        <meta http-equiv="Content-Security-Policy" content="
+            default-src 'none';
+            script-src 'nonce-${nonce}' https://cdn.jsdelivr.net;
+            style-src ${webview.cspSource} 'unsafe-inline';
+            font-src ${webview.cspSource};
+        ">
+        
+            <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
         <style>
-            body {
+            * {
+                font-size: 18px;
+            }
+            body { 
                 margin: 0;
                 padding: 20px;
                 height: calc(100dvh - 40px); /* Fixed calculation syntax */
                 width: calc(100dvw - 40px);  /* Fixed calculation syntax */
-                display: flex;               /* Removed quotes */
-                flex-direction: column;      /* Removed quotes */
+                display: flex;
+                flex-direction: column;
                 gap: 20px;
                 background-color: var(--vscode-editor-background);
                 color: var(--vscode-editor-foreground);
@@ -49,24 +56,23 @@ export default function getWebviewContent(webview: vscode.Webview): string {
             }
     
             .input-container {
-                flex: 0 0 auto;
-                display: flex;
                 gap: 10px;
                 height: fit-content;
             }
     
-            #code-input { 
+            #user-input { 
                 flex: 1;
                 padding: 15px;
+                width: 100%;
                 border: 1px solid var(--vscode-input-border);
                 background-color: var(--vscode-input-background);
                 color: var(--vscode-input-foreground);
                 font-family: var(--vscode-editor-font-family);
-                font-size: 14px;
                 border-radius: 3px;
-                resize: vertical;
-                min-height: 50px;
-                box-sizing: border-box;
+                resize: vertical;  /* Allows vertical resizing only */
+                min-height: 100px; /* Minimum height */
+                max-height: 70vh;  /* Maximum height (70% of viewport height) */
+                overflow-y: auto;  /* Show scrollbar when content exceeds height */                box-sizing: border-box;
             }
     
             #send-button {
@@ -108,35 +114,82 @@ export default function getWebviewContent(webview: vscode.Webview): string {
                 0%, 100% { opacity: 1; }
                 50% { opacity: 0; }
             }
+            select {
+                padding: 10px;
+                border: none;
+                border-radius: 4px;
+                width: 200px;
+                background-color: var(--vscode-input-background);
+                color: var(--vscode-editor-foreground); 
+            }
+
+            select:focus {
+                outline: none;
+            }
+
+            #sources {
+                overflow: auto; 
+                max-height: 20dvh; 
+                margin-top: 15px;
+                border-top: 1px solid var(--vscode-editorWidget-border);
+                padding-top: 10px;
+                font-size: 0.9em;
+            }
+
+            #sources div {
+                margin: 5px 0;
+                padding-left: 15px;
+                position: relative;
+            }
+
+            #sources div::before {
+                position: absolute;
+                left: 0;
+                color: var(--vscode-editor-foreground);
+            }
+
+            .navbar {
+                flex-direction: row; 
+                display: flex; 
+                gap: 20px;
+                justify-content: space-between; 
+            }
+
         </style>
     </head>
     <body>
+    <div class="navbar">  
+        <div style="font-size: 32px; font-weight: 400"> Perplexity AI </div>
+        <select name="Model" id="model-selector" required>
+            <option value="sonar">Sonar</option>
+            <option value="sonar-pro">Sonar-Pro</option>
+            <option value="sonar-reasoning">Sonar-Reasoning</option>
+        </select>
+    </div> 
+
+        <div id="sources">
+        </div> 
         <div id="response-container">
-            <div id="response-text" class="response-text"></div>
+            <div id="response-text" class="response-text">
+            </div>
         </div>
     
         <div class="input-container">
             <textarea 
-                id="code-input" 
-                placeholder="Enter your code question..."
+                id="user-input" 
+                placeholder="Enter your code question... Hit Enter to send. Hit Shift + Enter to add another line"
                 spellcheck="false"
             ></textarea>
-            <button id="send-button" disabled>
-                Send
-            </button>
+
         </div>
     
         <script nonce="${nonce}">
         const vscode = acquireVsCodeApi();
-        const input = document.getElementById('code-input');
-        const button = document.getElementById('send-button');
+        const input = document.getElementById('user-input');
         const responseText = document.getElementById('response-text');
         let cursorElement = null;
 
         // Handle input validation
-        input.addEventListener('input', () => {
-            button.disabled = input.value.trim().length === 0;
-        });
 
         // Handle Enter key (Shift+Enter for newline)
         input.addEventListener('keydown', (e) => {
@@ -147,7 +200,6 @@ export default function getWebviewContent(webview: vscode.Webview): string {
         });
 
         // Send message to extension
-        button.addEventListener('click', sendMessage);
 
         function sendMessage() {
             const message = input.value.trim();
@@ -157,19 +209,38 @@ export default function getWebviewContent(webview: vscode.Webview): string {
                     text: message
                 });
                 input.value = '';
-                button.disabled = true;
             }
         }
 
         window.addEventListener('message', event => {
             const message = event.data;
-            
-            if (message.command) {
-                // Create text node for safe HTML escaping
-                const responseText = document.getElementById("response-text"); 
-                responseText.innerText += message.content; 
+            const responseText = document.getElementById("response-text");
+            const sourcesList = document.getElementById("sources");
+
+            if (message.command === "stream") {
+                // Append streaming text safely
+                responseText.textContent += message.content;
+            } else if (message.command === "complete") {
+                // Process final Markdown rendering
+                responseText.innerHTML = marked.parse(responseText.textContent.trim());
+            } else if (message.command === "source") {
+                // Create new source element with Markdown parsing
+                const sourceItem = document.createElement('div');
+                sourceItem.innerHTML = marked.parse('- ' + message.content);
+                sourcesList.prepend(sourceItem);  // Add to top of sources list
             }
-        });		
+        });
+
+
+        const dropdown = document.getElementById('model-selector');
+        dropdown.addEventListener('change', (e) => {
+            vscode.postMessage({
+                    command: 'selectModel',
+                    content: e.target.value
+            });
+        });
+
+
         </script>
     </body>
     </html>
