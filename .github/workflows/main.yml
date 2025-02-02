@@ -2,9 +2,9 @@ name: Build, Test, and Publish VS Code Extension
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
   release:
     types: [created]
 
