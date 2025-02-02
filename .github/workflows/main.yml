@@ -1,87 +1,54 @@
-name: Build, Test, and Publish VS Code Extension
+name: Build and Publish (Windows/macOS)
 
 on:
   push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+    branches: [ main ]
   release:
-    types: [created]
+    types: [ created ]
 
 jobs:
   test:
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ macos-latest, windows-latest ]
     runs-on: ${{ matrix.os }}
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    # Linux-specific X server setup
-    - name: Configure Linux X Server
-      if: runner.os == 'Linux'
-      run: |
-        # Install required graphics dependencies
-        sudo apt-get install -y mesa-vulkan-drivers vulkan-tools dbus-x11 || wget -qO- https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo tee /etc/apt/trusted.gpg.d/lunarg.asc; sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-$(lsb_release -cs).list https://packages.lunarg.com/vulkan/lunarg-vulkan-$(lsb_release -cs).list;  sudo apt update; sudo apt install vulkan-sdk mesa-vulkan-drivers
+    - name: Install Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 18.x
 
-
-    
-        # Configure X server
-        export DISPLAY=:99
-        Xvfb $DISPLAY -screen 0 1920x1080x24 >/dev/null 2>&1 &
-    
-        # Fix D-Bus address escaping
-        export XDG_RUNTIME_DIR=/run/user/$(id -u)
-        sudo mkdir -p $XDG_RUNTIME_DIR
-        sudo chmod 0700 $XDG_RUNTIME_DIR
-        export DBUS_SESSION_BUS_ADDRESS="unix:path=${XDG_RUNTIME_DIR}/bus"
-        
-        # Start D-Bus with escaped path
-        dbus-daemon --session --address="$DBUS_SESSION_BUS_ADDRESS" --nofork --nopidfile &
-    
-        # Force software rendering
-        mkdir -p ~/.vscode
-        echo '{ "disable-hardware-acceleration": true }' > ~/.vscode/argv.json
-        export LIBGL_ALWAYS_SOFTWARE=1
-        export GALLIUM_DRIVER=llvmpipe
-    
-        # Run tests
-        xvfb-run -a npm test
-        # macOS X server setup
-    - name: Configure macOS X Server
+    # macOS specific display setup
+    - name: Configure macOS Display
       if: runner.os == 'macOS'
       run: |
         brew install --cask xquartz
         /opt/X11/bin/Xvfb :99 -ac -screen 0 1024x768x8 &
         echo "DISPLAY=:99" >> $GITHUB_ENV
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 18.x
-        cache: 'npm'
-
     - name: Install Dependencies
       run: npm ci
 
+    - name: Configure VS Code
+      run: |
+        mkdir -p ~/.vscode
+        echo '{ "disable-hardware-acceleration": true }' > ~/.vscode/argv.json
+
     - name: Run Tests
-      env:
-        DISPLAY: ${{ runner.os == 'macOS' && ':99' || runner.os == 'Linux' && ':99' }}
-        XDG_RUNTIME_DIR: /run/user/$(id -u)
-        DBUS_SESSION_BUS_ADDRESS: unix:path=$XDG_RUNTIME_DIR/bus
-        ELECTRON_OZONE_PLATFORM_HINT: "x11"
       run: npm test
 
   publish:
     needs: test
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     if: startsWith(github.ref, 'refs/tags/')
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Setup Node.js
+    - name: Install Node.js
       uses: actions/setup-node@v4
       with:
         node-version: 18.x
@@ -89,12 +56,8 @@ jobs:
     - name: Install Dependencies
       run: npm ci
 
-    - name: Package Extension
-      run: vsce package
-
-    - name: Publish to Marketplace
+    - name: Package and Publish
       uses: HaaLeo/publish-vscode-extension@v1
       with:
         pat: ${{ secrets.VSCE_PAT }}
         registryUrl: https://marketplace.visualstudio.com
-        extensionFile: '*.vsix'
