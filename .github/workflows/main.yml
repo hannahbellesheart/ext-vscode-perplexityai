@@ -23,7 +23,9 @@ jobs:
       if: runner.os == 'Linux'
       run: |
         # Install required graphics dependencies
-        sudo apt-get install -y mesa-vulkan-drivers vulkan-utils dbus-x11
+        sudo apt-get install -y mesa-vulkan-drivers vulkan-tools dbus-x11 || wget -qO- https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo tee /etc/apt/trusted.gpg.d/lunarg.asc; sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-$(lsb_release -cs).list https://packages.lunarg.com/vulkan/lunarg-vulkan-$(lsb_release -cs).list;  sudo apt update sudo apt install; vulkan-sdk mesa-vulkan-drivers
+
+
     
         # Configure X server
         export DISPLAY=:99
