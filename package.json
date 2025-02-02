@@ -2,12 +2,12 @@
   "name": "perplexity-ext",
   "displayName": "perplexity-ext",
   "description": "AI Integration for Perplexity.ai with VSCode",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "engines": {
     "vscode": "^1.96.0"
   },
   "categories": [
-    "Other"
+    "AI"
   ],
   "activationEvents": [],
   "main": "./dist/extension.js",
