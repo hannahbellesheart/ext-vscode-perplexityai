@@ -62,7 +62,6 @@ jobs:
       run: vsce package
 
     - name: Publish to Marketplace
-      uses: HaaLeo/publish-vscode-extension@v1
-      with:
-        pat: ${{ secrets.VSCE_PAT }}
-        registryUrl: https://marketplace.visualstudio.com
+      run: npm run deploy
+      env:
+        VSCE_PAT: ${{ secrets.VSCE_PAT }}
