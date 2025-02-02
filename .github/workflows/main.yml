@@ -1,35 +1,52 @@
+name: Cross-Platform GUI Tests
+
 on:
   push:
     branches:
       - master
-  release:
-    types:
-    - created
+
 jobs:
-  build:
+  test:
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
-    - name: Checkout
+    - name: Checkout code
       uses: actions/checkout@v4
+
+    # Linux setup
+    - name: Setup Xvfb (Linux)
+      if: runner.os == 'Linux'
+      uses: GabrielBB/xvfb-action@v1
+      with:
+        run: echo "Xvfb configured"
+
+    # macOS setup
+    - name: Install XQuartz (macOS)
+      if: runner.os == 'macOS'
+      run: |
+        brew update
+        brew install --cask xquartz
+        /opt/X11/bin/Xvfb :99 -ac -screen 0 1024x768x8 &
+        echo "DISPLAY=:99" >> $GITHUB_ENV
+
+    # Windows setup (no Xvfb needed)
+    - name: Configure Windows display
+      if: runner.os == 'Windows'
+      run: echo "Windows requires no X server configuration"
+
     - name: Install Node.js
       uses: actions/setup-node@v4
       with:
         node-version: 18.x
-    - run: npm install
-    - run: |
-        export XDG_RUNTIME_DIR=/run/user/$(id -u)
-        export DBUS_SESSION_BUS_ADDRESS=unix:path=$XDG_RUNTIME_DIR/bus
-        dbus-daemon --session --address=$DBUS_SESSION_BUS_ADDRESS --nofork --nopidfile --syslog-only &
-        mkdir -p ~/.vscode && echo '{ "disable-hardware-acceleration": true }' > ~/.vscode/argv.json
-        xvfb-run -a npm test
-      if: runner.os == 'Linux'
-    - run: npm test
-      if: runner.os != 'Linux'
-    - name: Publish
-      if: success() && startsWith(github.ref, 'refs/tags/') && matrix.os == 'ubuntu-latest'
-      run: npm run deploy
+
+    - name: Install dependencies
+      run: npm install
+
+    # Test execution
+    - name: Run tests
+      run: npm test
       env:
-        VSCE_PAT: ${{ secrets.VSCE_PAT }}
+        # Required for macOS/Linux GUI tests
+        DISPLAY: ${{ runner.os == 'macOS' && ':99' || runner.os == 'Linux' && ':99' }}
