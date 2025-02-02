@@ -17,38 +17,7 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-
-    # Linux-specific X server setup
-    - name: Configure Linux X Server
-      if: runner.os == 'Linux'
-      run: |
-        # Install required graphics dependencies
-        sudo apt-get install -y mesa-vulkan-drivers vulkan-tools dbus-x11 || wget -qO- https://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo tee /etc/apt/trusted.gpg.d/lunarg.asc; sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-$(lsb_release -cs).list https://packages.lunarg.com/vulkan/lunarg-vulkan-$(lsb_release -cs).list;  sudo apt update; sudo apt install vulkan-sdk mesa-vulkan-drivers
-
-
-    
-        # Configure X server
-        export DISPLAY=:99
-        Xvfb $DISPLAY -screen 0 1920x1080x24 >/dev/null 2>&1 &
-    
-        # Fix D-Bus address escaping
-        export XDG_RUNTIME_DIR=/run/user/$(id -u)
-        sudo mkdir -p $XDG_RUNTIME_DIR
-        sudo chmod 0700 $XDG_RUNTIME_DIR
-        export DBUS_SESSION_BUS_ADDRESS="unix:path=${XDG_RUNTIME_DIR}/bus"
-        
-        # Start D-Bus with escaped path
-        dbus-daemon --session --address="$DBUS_SESSION_BUS_ADDRESS" --nofork --nopidfile &
-    
-        # Force software rendering
-        mkdir -p ~/.vscode
-        echo '{ "disable-hardware-acceleration": true }' > ~/.vscode/argv.json
-        export LIBGL_ALWAYS_SOFTWARE=1
-        export GALLIUM_DRIVER=llvmpipe
-    
-        # Run tests
-        xvfb-run -a npm test
-        # macOS X server setup
+      # macOS X server setup
     - name: Configure macOS X Server
       if: runner.os == 'macOS'
       run: |
