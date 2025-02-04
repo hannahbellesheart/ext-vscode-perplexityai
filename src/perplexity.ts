@@ -1,17 +1,22 @@
 interface PerplexityRequest {
 	model: string;
-	messages: Array<{ role: string; content: string }>;
+	messages: Array<PerplexityMessage>;
 	temperature?: number;
 	top_p?: number;
 	max_tokens?: number;
 	stream?: boolean;
 }
 
+export interface PerplexityMessage{
+	role: string;
+	content: string
+}
 
 
 
 export default async function sendMessageToPerplexity(
 	message: string,
+	context: PerplexityMessage[],
 	model: string, 
 	apiKey: string,
 	sendContentToInnerWebView: Function
@@ -21,10 +26,7 @@ export default async function sendMessageToPerplexity(
 	const requestBody: PerplexityRequest = {
 		model: model,
 		messages: [
-			{
-				role: "system",
-				content: "Be precise and concise."
-			},
+			...context, 
 			{
 				role: "user",
 				content: message
@@ -114,7 +116,7 @@ export default async function sendMessageToPerplexity(
 
 	} catch (error) {
 		if (error instanceof DOMException && error.name === "AbortError") {
-			throw new Error("Request timed out after 15 seconds");
+			throw new Error("Request timed out after 60 seconds");
 		}
 		throw new Error(`Failed to complete request: ${(error as Error).message}`);
 	}

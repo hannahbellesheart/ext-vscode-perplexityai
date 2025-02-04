@@ -27,7 +27,7 @@ export default function getWebviewContent(webview: vscode.Webview): string {
             font-src ${webview.cspSource};
         ">
         
-            <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js" integrity="sha256-OMcKHnypGrQOLZ5uYBKYUacX7Rx9Ssu91Bv5UDeRz2g=" crossorigin="anonymous"></script>        
         <style>
             * {
                 font-size: 18px;
@@ -184,38 +184,24 @@ export default function getWebviewContent(webview: vscode.Webview): string {
         </div>
     
         <script nonce="${nonce}">
+        const md = window.markdownit();
         const vscode = acquireVsCodeApi();
         const input = document.getElementById('user-input');
         const responseText = document.getElementById('response-text');
         let cursorElement = null;
-
+        let responseTextMessageForContext = ""; 
         // Handle input validation
 
         // Handle Enter key (Shift+Enter for newline)
         input.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                responseText.textContent += "<br />"; 
-                responseText.textContent += "$ ***" + input.value + "***";
-                responseText.textContent += "<br />";                 
-                responseText.textContent += "---------------------------------"
-                responseText.textContent += "<br /><br />"; 
+                responseText.textContent += "## $: " + input.value + '\\n';
                 sendMessage();
             }
         });
 
-        // Send message to extension
 
-        function sendMessage() {
-            const message = input.value.trim();
-            if (message) {
-                vscode.postMessage({
-                    command: 'submit',
-                    text: message
-                });
-                input.value = '';
-            }
-        }
 
         window.addEventListener('message', event => {
             const message = event.data;
@@ -227,14 +213,34 @@ export default function getWebviewContent(webview: vscode.Webview): string {
                 responseText.textContent += message.content;
             } else if (message.command === "complete") {
                 // Process final Markdown rendering
-                responseText.innerHTML = marked.parse(responseText.textContent.trim());
+                responseTextMessageForContext = responseText.textContent.trim(); 
+                responseText.innerHTML = md.render(responseTextMessageForContext);
             } else if (message.command === "source") {
                 // Create new source element with Markdown parsing
                 const sourceItem = document.createElement('div');
-                sourceItem.innerHTML = marked.parse('- ' + message.content);
+                sourceItem.innerHTML = md.render('- ' + message.content);
                 sourcesList.prepend(sourceItem);  // Add to top of sources list
             }
         });
+
+
+        // Send message to extension
+
+        function sendMessage() {
+            const message = input.value.trim();
+            if (message) {
+                vscode.postMessage({
+                    context: {
+                        role: "system", 
+                        content: "CONTEXT: " + responseTextMessageForContext
+                    },
+                    command: 'submit',
+                    content: message
+                });
+                input.value = '';
+            }
+        }
+
 
 
         const dropdown = document.getElementById('model-selector');
@@ -245,6 +251,7 @@ export default function getWebviewContent(webview: vscode.Webview): string {
             });
         });
 
+        //send errors to vscode
 
         </script>
     </body>

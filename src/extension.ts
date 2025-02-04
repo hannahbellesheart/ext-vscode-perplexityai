@@ -3,7 +3,7 @@
 import * as vscode from 'vscode';
 import getWebviewContent from './webviewContent';
 import sendMessageToPerplexity from './perplexity';
-
+import { PerplexityMessage } from './perplexity';
 export function activate(context: vscode.ExtensionContext) {
 
 
@@ -25,6 +25,11 @@ export function activate(context: vscode.ExtensionContext) {
 
 	const disposableChatWindow = vscode.commands.registerCommand('perplexity-ext.openChatWindow', async () => {
 
+		let messageContext: PerplexityMessage[] = [{
+			role: "system", 
+			content: "Be precise and concise. The messages for context have a \"CONTEXT:\" at the begginning, from which the \"$\" represents the start of a user's prompt"
+		}];
+
 		let model = "sonar"; 
 
 		const panel = vscode.window.createWebviewPanel(
@@ -44,14 +49,22 @@ export function activate(context: vscode.ExtensionContext) {
 
 
 		// If the rendered page is sending a message, we check what type of message it is (In this case it can only be "submit") so we go ahead and call sendMessageToPerplexity in order to get the response from the API. 
-		panel.webview.onDidReceiveMessage(async message => {
+		panel.webview.onDidReceiveMessage(async (message: {
+			context: PerplexityMessage,
+			content: string, 
+			command: string
+		}) => {
 			if (!apiKey) {
 				vscode.window.showErrorMessage("API key not configured");
 			} else {
 				switch (message.command) {
 					case 'submit':
 						try {
-							await sendMessageToPerplexity(message.text, model, apiKey, panel.webview.postMessage.bind(panel.webview));
+
+							// Add the previous context sent by the embedded webview
+							messageContext.push(message.context); 
+							console.log(messageContext); 
+							await sendMessageToPerplexity(message.content, messageContext, model, apiKey, panel.webview.postMessage.bind(panel.webview));
 						} catch (error) {
 							panel.webview.postMessage({
 								command: 'error',
@@ -63,6 +76,9 @@ export function activate(context: vscode.ExtensionContext) {
 						console.log("Selecting model: " + message.content); 
 						model = message.content; 
 						break; 
+					case "webviewError": 
+						console.error(message.content); 
+						break;
 				}
 			}
 		}, undefined, context.subscriptions);
