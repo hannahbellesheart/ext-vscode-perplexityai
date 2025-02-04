@@ -77,7 +77,10 @@ export function activate(context: vscode.ExtensionContext) {
 						break;
 					case "setContext": 
 						messageContext.push(message.context); 
-						console.log(message);
+						if(messageContext.length > 10 ) {
+							messageContext.shift(); 
+						}
+						console.log(messageContext);
 				}
 			}
 		}, undefined, context.subscriptions);

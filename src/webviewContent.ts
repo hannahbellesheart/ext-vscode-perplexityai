@@ -184,11 +184,16 @@ export default function getWebviewContent(webview: vscode.Webview): string {
         </div>
     
         <script nonce="${nonce}">
-        const md = window.markdownit();
+        const md = window.markdownit({
+            breaks: true, 
+            linkify: true, 
+            typographer: true
+        });
         const vscode = acquireVsCodeApi();
         const input = document.getElementById('user-input');
         let userPrompt = "";
         const responseText = document.getElementById('response-text');
+        const currentResponseText = document.getElementById("current-message");
         let cursorElement = null;
         let responseTextMessageForContext = ""; 
         // Handle input validation
@@ -197,7 +202,7 @@ export default function getWebviewContent(webview: vscode.Webview): string {
         input.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                responseText.textContent += "\\n ## $: " + input.value + '\\n';
+                currentResponseText.innerText += "## $: " + input.value + '\\n';
                 userPrompt = input.value; 
                 sendMessage();
             }
@@ -218,18 +223,18 @@ export default function getWebviewContent(webview: vscode.Webview): string {
         window.addEventListener('message', event => {
             const message = event.data;
             let streamChunk = ""; 
-            const responseText = document.getElementById("response-text");
-            const currentResponseText = document.getElementById("current-message");
             const sourcesList = document.getElementById("sources");
 
             if (message.command === "stream") {
                 // Append streaming text safely
-                currentResponseText.innerHTML += message.content;
+                currentResponseText.innerText += message.content;
             } else if (message.command === "complete") {
                 // Process final Markdown rendering
-                responseTextMessageForContext = currentResponseText.innerText.trim();  
-                responseText.innerHTML += md.render(currentResponseText.innerHTML);;
+                responseTextMessageForContext = currentResponseText.innerText.trim();
+                currentResponseText.innerHTML =   md.render(currentResponseText.innerText)
+                responseText.insertAdjacentHTML('beforeend', currentResponseText.innerHTML);
                 currentResponseText.innerText = "";
+                currentResponseText.style.whiteSpace = 'pre-wrap';
 
                 sendContext(userPrompt, responseTextMessageForContext); 
             } else if (message.command === "source") {
