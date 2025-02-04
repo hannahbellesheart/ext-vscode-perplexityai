@@ -27,7 +27,7 @@ export default function getWebviewContent(webview: vscode.Webview): string {
             font-src ${webview.cspSource};
         ">
         
-            <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js" integrity="sha256-OMcKHnypGrQOLZ5uYBKYUacX7Rx9Ssu91Bv5UDeRz2g=" crossorigin="anonymous"></script>        
         <style>
             * {
                 font-size: 18px;
@@ -98,7 +98,6 @@ export default function getWebviewContent(webview: vscode.Webview): string {
             }
     
             .response-text {
-                white-space: pre-wrap;
                 line-height: 1.5;
                 font-family: var(--vscode-editor-font-family);
             }
@@ -172,6 +171,7 @@ export default function getWebviewContent(webview: vscode.Webview): string {
         <div id="response-container">
             <div id="response-text" class="response-text">
             </div>
+            <div id="current-message"> </div> 
         </div>
     
         <div class="input-container">
@@ -184,28 +184,64 @@ export default function getWebviewContent(webview: vscode.Webview): string {
         </div>
     
         <script nonce="${nonce}">
+        const md = window.markdownit({
+            breaks: true, 
+            linkify: true, 
+            typographer: true
+        });
         const vscode = acquireVsCodeApi();
         const input = document.getElementById('user-input');
+        let userPrompt = "";
         const responseText = document.getElementById('response-text');
+        const currentResponseText = document.getElementById("current-message");
         let cursorElement = null;
-
+        let responseTextMessageForContext = ""; 
         // Handle input validation
 
         // Handle Enter key (Shift+Enter for newline)
         input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                if (e.shiftKey) {
-                    // Handle Shift+Enter by adding a new line
-                    e.preventDefault();
-                    input.value += '\n';
-                    // Move cursor to the bottom of the textarea
-                    input.scrollTop = input.scrollHeight;
-                } else {
-                    // Handle regular Enter to send message
-                    e.preventDefault();
-                    responseText.textContent += "## " + input.value;
-                    sendMessage();
-                }
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                currentResponseText.innerText += "## $: " + input.value + '\\n';
+                userPrompt = input.value; 
+                sendMessage();
+            }
+        });
+
+
+        function sendContext(prompt, response) { 
+            vscode.postMessage({
+                command: "setContext", 
+                context: {
+                        role: "system", 
+                        content: "CONTEXT: USER PROMPT: " + prompt + " AI RESPONSE: " + response
+                },
+            })
+        }
+
+
+        window.addEventListener('message', event => {
+            const message = event.data;
+            let streamChunk = ""; 
+            const sourcesList = document.getElementById("sources");
+
+            if (message.command === "stream") {
+                // Append streaming text safely
+                currentResponseText.innerText += message.content;
+            } else if (message.command === "complete") {
+                // Process final Markdown rendering
+                responseTextMessageForContext = currentResponseText.innerText.trim();
+                currentResponseText.innerHTML =   md.render(currentResponseText.innerText)
+                responseText.insertAdjacentHTML('beforeend', currentResponseText.innerHTML);
+                currentResponseText.innerText = "";
+                currentResponseText.style.whiteSpace = 'pre-wrap';
+
+                sendContext(userPrompt, responseTextMessageForContext); 
+            } else if (message.command === "source") {
+                // Create new source element with Markdown parsing
+                const sourceItem = document.createElement('div');
+                sourceItem.innerHTML = md.render('- ' + message.content);
+                sourcesList.prepend(sourceItem);  // Add to top of sources list
             }
         });
 
@@ -217,30 +253,12 @@ export default function getWebviewContent(webview: vscode.Webview): string {
             if (message) {
                 vscode.postMessage({
                     command: 'submit',
-                    text: message
+                    content: message
                 });
                 input.value = '';
             }
         }
 
-        window.addEventListener('message', event => {
-            const message = event.data;
-            const responseText = document.getElementById("response-text");
-            const sourcesList = document.getElementById("sources");
-
-            if (message.command === "stream") {
-                // Append streaming text safely
-                responseText.textContent += message.content;
-            } else if (message.command === "complete") {
-                // Process final Markdown rendering
-                responseText.innerHTML = marked.parse(responseText.textContent.trim());
-            } else if (message.command === "source") {
-                // Create new source element with Markdown parsing
-                const sourceItem = document.createElement('div');
-                sourceItem.innerHTML = marked.parse('- ' + message.content);
-                sourcesList.prepend(sourceItem);  // Add to top of sources list
-            }
-        });
 
 
         const dropdown = document.getElementById('model-selector');
@@ -251,6 +269,7 @@ export default function getWebviewContent(webview: vscode.Webview): string {
             });
         });
 
+        //send errors to vscode
 
         </script>
     </body>
