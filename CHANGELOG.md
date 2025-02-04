@@ -1,5 +1,10 @@
 # Change Log
-
+## v1.1.0 
+#### Changes
+- Added message history context
+- Added limit for message history size (currently 10)
+#### Bugfixes
+- Ensured that MD content is properly showing up, before it used to render a lot of additional spaces
 ## v1.0.1
 #### Bugfixes 
 - Ensured that the AI is being called with the whole request body
