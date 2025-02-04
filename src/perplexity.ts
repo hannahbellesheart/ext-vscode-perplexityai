@@ -90,7 +90,7 @@ export default async function sendMessageToPerplexity(
 						const data = JSON.parse(jsonStr);
 						const chunk = data.choices[0]?.delta?.content || '';
 						listOfSources = data.citations; 
-                        console.log(chunk);
+                        // console.log(chunk);
 						if (chunk) {
 							sendContentToInnerWebView({
 								command: 'stream',

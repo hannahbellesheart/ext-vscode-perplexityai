@@ -98,7 +98,6 @@ export default function getWebviewContent(webview: vscode.Webview): string {
             }
     
             .response-text {
-                white-space: pre-wrap;
                 line-height: 1.5;
                 font-family: var(--vscode-editor-font-family);
             }
@@ -172,6 +171,7 @@ export default function getWebviewContent(webview: vscode.Webview): string {
         <div id="response-container">
             <div id="response-text" class="response-text">
             </div>
+            <div id="current-message"> </div> 
         </div>
     
         <div class="input-container">
@@ -187,6 +187,7 @@ export default function getWebviewContent(webview: vscode.Webview): string {
         const md = window.markdownit();
         const vscode = acquireVsCodeApi();
         const input = document.getElementById('user-input');
+        let userPrompt = "";
         const responseText = document.getElementById('response-text');
         let cursorElement = null;
         let responseTextMessageForContext = ""; 
@@ -196,25 +197,41 @@ export default function getWebviewContent(webview: vscode.Webview): string {
         input.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                responseText.textContent += "## $: " + input.value + '\\n';
+                responseText.textContent += "\\n ## $: " + input.value + '\\n';
+                userPrompt = input.value; 
                 sendMessage();
             }
         });
 
 
+        function sendContext(prompt, response) { 
+            vscode.postMessage({
+                command: "setContext", 
+                context: {
+                        role: "system", 
+                        content: "CONTEXT: USER PROMPT: " + prompt + " AI RESPONSE: " + response
+                },
+            })
+        }
+
 
         window.addEventListener('message', event => {
             const message = event.data;
+            let streamChunk = ""; 
             const responseText = document.getElementById("response-text");
+            const currentResponseText = document.getElementById("current-message");
             const sourcesList = document.getElementById("sources");
 
             if (message.command === "stream") {
                 // Append streaming text safely
-                responseText.textContent += message.content;
+                currentResponseText.innerHTML += message.content;
             } else if (message.command === "complete") {
                 // Process final Markdown rendering
-                responseTextMessageForContext = responseText.textContent.trim(); 
-                responseText.innerHTML = md.render(responseTextMessageForContext);
+                responseTextMessageForContext = currentResponseText.innerText.trim();  
+                responseText.innerHTML += md.render(currentResponseText.innerHTML);;
+                currentResponseText.innerText = "";
+
+                sendContext(userPrompt, responseTextMessageForContext); 
             } else if (message.command === "source") {
                 // Create new source element with Markdown parsing
                 const sourceItem = document.createElement('div');
@@ -230,10 +247,6 @@ export default function getWebviewContent(webview: vscode.Webview): string {
             const message = input.value.trim();
             if (message) {
                 vscode.postMessage({
-                    context: {
-                        role: "system", 
-                        content: "CONTEXT: " + responseTextMessageForContext
-                    },
                     command: 'submit',
                     content: message
                 });

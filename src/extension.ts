@@ -60,10 +60,6 @@ export function activate(context: vscode.ExtensionContext) {
 				switch (message.command) {
 					case 'submit':
 						try {
-
-							// Add the previous context sent by the embedded webview
-							messageContext.push(message.context); 
-							console.log(messageContext); 
 							await sendMessageToPerplexity(message.content, messageContext, model, apiKey, panel.webview.postMessage.bind(panel.webview));
 						} catch (error) {
 							panel.webview.postMessage({
@@ -79,6 +75,9 @@ export function activate(context: vscode.ExtensionContext) {
 					case "webviewError": 
 						console.error(message.content); 
 						break;
+					case "setContext": 
+						messageContext.push(message.context); 
+						console.log(message);
 				}
 			}
 		}, undefined, context.subscriptions);
