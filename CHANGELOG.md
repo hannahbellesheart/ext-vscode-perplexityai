@@ -1,5 +1,11 @@
 # Change Log
 
+## v1.2.0
+#### Changes
+- Added message history of 16 (8 user messages and 8 responses) to save up tokens
+- Removed "thoughts" from the screen after the message is complete for better readability
+- Removed "thoughts" from previous messages to not waste AI tokens
+
 ## v1.1.2
 #### Changes 
 - Added sonar-reasoning-pro model
