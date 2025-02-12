@@ -25,10 +25,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	const disposableChatWindow = vscode.commands.registerCommand('perplexity-ext.openChatWindow', async () => {
 
-		let messageContext: PerplexityMessage[] = [{
-			role: "system", 
-			content: "Make sure you are correct!"
-		}];
+		let messageContext: PerplexityMessage[] = [];
 
 		let model = "sonar"; 
 
@@ -92,6 +89,14 @@ export function activate(context: vscode.ExtensionContext) {
 						};
 						messageContext.push(previousUserPrompt); 
 						messageContext.push(previousAiResponse); 
+
+						// Add limit of 16 total messages to not use up too many tokens 
+
+						if(messageContext.length > 16) {
+							messageContext.shift(); 
+							messageContext.shift(); 
+						}
+
 						console.log(messageContext);
 				}
 			}

@@ -26,6 +26,10 @@ export default async function sendMessageToPerplexity(
 	const requestBody: PerplexityRequest = {
 		model: model,
 		messages: [
+			{
+				role: "system", 
+				content: "Make sure you are correct!"
+			},
 			...context, 
 			{
 				role: "user",
