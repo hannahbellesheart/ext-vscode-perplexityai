@@ -1,6 +1,6 @@
 # Change Log
 
-## v1.1.1
+## v1.1.2
 #### Changes 
 - Added sonar-reasoning-pro model
 - Added the current context up to spec with Perplexity's API standards 
