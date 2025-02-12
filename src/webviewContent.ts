@@ -163,6 +163,8 @@ export default function getWebviewContent(webview: vscode.Webview): string {
             <option value="sonar">Sonar</option>
             <option value="sonar-pro">Sonar-Pro</option>
             <option value="sonar-reasoning">Sonar-Reasoning</option>
+            <option value="sonar-reasoning-pro">Sonar-Reasoning-Pro</option>
+
         </select>
     </div> 
 
@@ -209,13 +211,12 @@ export default function getWebviewContent(webview: vscode.Webview): string {
         });
 
 
+        // This function is called when the message is complete and we want to send the context back to the parent window for future messages
         function sendContext(prompt, response) { 
             vscode.postMessage({
-                command: "setContext", 
-                context: {
-                        role: "system", 
-                        content: "CONTEXT: USER PROMPT: " + prompt + " AI RESPONSE: " + response
-                },
+                command: "setContext",
+                prompt: prompt,
+                response: response 
             })
         }
 
