@@ -231,6 +231,13 @@ export default function getWebviewContent(webview: vscode.Webview): string {
                 currentResponseText.innerText += message.content;
             } else if (message.command === "complete") {
                 // Process final Markdown rendering
+
+                // Remove all returned reasononing tokens from the response as they take a lot tokens
+                const indexOfStartReasoningTokens = currentResponseText.innerText.indexOf("<think>");
+                const indexOfEndReasoningTokens = currentResponseText.innerText.indexOf("</think>");
+
+                currentResponseText.innerText = currentResponseText.innerText.slice(0, indexOfStartReasoningTokens) + currentResponseText.innerText.slice(indexOfEndReasoningTokens + 8, currentResponseText.innerText.length); 
+
                 responseTextMessageForContext = currentResponseText.innerText.trim();
                 currentResponseText.innerHTML =   md.render(currentResponseText.innerText)
                 responseText.insertAdjacentHTML('beforeend', currentResponseText.innerHTML);
