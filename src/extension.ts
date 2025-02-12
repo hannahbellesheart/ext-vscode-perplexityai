@@ -27,7 +27,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 		let messageContext: PerplexityMessage[] = [{
 			role: "system", 
-			content: "Be precise and concise. The messages for context have a \"CONTEXT:\" at the begginning, from which the \"$\" represents the start of a user's prompt"
+			content: "Make sure you are correct!"
 		}];
 
 		let model = "sonar"; 
@@ -52,7 +52,9 @@ export function activate(context: vscode.ExtensionContext) {
 		panel.webview.onDidReceiveMessage(async (message: {
 			context: PerplexityMessage,
 			content: string, 
-			command: string
+			command: string, 
+			prompt?: string, 
+			response?: string
 		}) => {
 			if (!apiKey) {
 				vscode.window.showErrorMessage("API key not configured");
@@ -76,10 +78,20 @@ export function activate(context: vscode.ExtensionContext) {
 						console.error(message.content); 
 						break;
 					case "setContext": 
-						messageContext.push(message.context); 
-						if(messageContext.length > 10 ) {
-							messageContext.shift(); 
-						}
+						// messageContext.push(message.context);
+						
+						// If we receive the setContext signal from the embedded window, we set the previous user prompt and assistant response in the message history 
+						const previousUserPrompt: PerplexityMessage = {
+							role: "user", 
+							content: message.prompt ?? "NO PROMPT"
+						};
+						
+						const previousAiResponse: PerplexityMessage = {
+							role: "assistant", 
+							content: message.response ?? "NO RESPONSE"
+						};
+						messageContext.push(previousUserPrompt); 
+						messageContext.push(previousAiResponse); 
 						console.log(messageContext);
 				}
 			}

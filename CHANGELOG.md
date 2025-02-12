@@ -1,4 +1,11 @@
 # Change Log
+
+## v1.1.1
+#### Changes 
+- Added sonar-reasoning-pro model
+- Added the current context up to spec with Perplexity's API standards 
+#### Bugfixes
+- Resolved the bug in which the model wouldn't 'remember' context or would mix-up messages order 
 ## v1.1.0 
 #### Changes
 - Added message history context
