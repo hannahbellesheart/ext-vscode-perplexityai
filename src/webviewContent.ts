@@ -206,17 +206,16 @@ export default function getWebviewContent(webview: vscode.Webview): string {
 
             const vscode = acquireVsCodeApi();
             const input = document.getElementById('user-input');
-            let userPrompt = "";
+            let userPrompt = "", userPromptPrefixDiv = '\\n\\n<div class="userMessage" >', userPromptSuffixDiv = ' </div>\\n\\n';
             const responseText = document.getElementById('response-text');
             const currentResponseText = document.getElementById("current-message");
             let cursorElement = null;
             let responseTextMessageForContext = ""; 
-
         // Handle Enter key (Shift+Enter for newline)
         input.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                currentResponseText.innerText += '\\n\\n<div class="userMessage" >' + input.value + ' </div>\\n\\n';
+                currentResponseText.innerText += userPromptPrefixDiv + input.value + userPromptSuffixDiv;
                 userPrompt = input.value; 
                 sendMessage();
             }
@@ -255,12 +254,10 @@ export default function getWebviewContent(webview: vscode.Webview): string {
                     responseContainer.scrollTop = responseText.scrollHeight;
 
                 } else if (message.command === "complete") {
+            
+                    // Extract the user prompt from the response text 
+                    responseTextMessageForContext = currentResponseText.innerText.split(userPromptSuffixDiv)[1]; 
                     // Process final Markdown rendering
-
-                    // Remove all returned reasononing tokens from the response as they take a lot tokens
-                    const indexOfStartReasoningTokens = currentResponseText.innerText.indexOf("<think>");
-                    const indexOfEndReasoningTokens = currentResponseText.innerText.indexOf("</think>");
-
                     currentResponseText.innerText = removeThinkings(currentResponseText.innerText); 
 
                     // Render the final response text and remove the "current response" text
