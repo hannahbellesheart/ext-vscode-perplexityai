@@ -3,8 +3,8 @@ export const PerplexityModels = [
     "sonar-pro", 
     "sonar-reasoning",
     "sonar-reasoning-pro",
-    "sonar-deep-research",
-    "r1-1776"
+    "sonar-deep-research"
+    // "r1-1776"
 ];
 
 // Might add some model utility functions here later so that's why it's not a json :) 
