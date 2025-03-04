@@ -1,5 +1,10 @@
 # Change Log
 
+## v1.3.3
+#### Changes
+- Added new icon and removed the old one 
+- Modified the display name to Perplexity.ai 
+
 ## v1.3.2
 #### Bugfixes
 - Resolved a bug where the responses from the message context (or history) would dissapear and only previous user prompts would be stored
