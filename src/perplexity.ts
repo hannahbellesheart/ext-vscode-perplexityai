@@ -73,6 +73,7 @@ export default async function sendMessageToPerplexity(
 						content: source
 					});
 				});
+				console.log("Processed response from Perplexity");
                 sendContentToInnerWebView({ command: 'complete' });
                 return; 
             }
@@ -84,14 +85,20 @@ export default async function sendMessageToPerplexity(
 				buffer = buffer.slice(lineIndex + 1);
 
 				if (line.startsWith('data: ')) {
-					const jsonStr = line.replace('data: ', '');
-					if (jsonStr === '[DONE]') {
-						sendContentToInnerWebView({ command: 'complete' });
-						return;
-					}
 
 					try {
+
+						const jsonStr = line.replace('data: ', '');
 						const data = JSON.parse(jsonStr);
+
+						if(data.choices[0]?.finished_reason === "stop"){ 
+
+							sendContentToInnerWebView({ command: 'complete' });
+							return;
+						}else if (data.choices[0]?.finished_reason) {
+							throw Error(data.choices[0]?.finished_reason); 
+						}
+
 						const chunk = data.choices[0]?.delta?.content || '';
 						listOfSources = data.citations; 
                         // console.log(chunk);

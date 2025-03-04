@@ -1,6 +1,9 @@
 import * as vscode from 'vscode';
+import { PerplexityModels } from './util/models';
 
 export default function getWebviewContent(webview: vscode.Webview): string {
+
+
 
     function getNonce(): string {
         let nonce = '';
@@ -166,11 +169,10 @@ export default function getWebviewContent(webview: vscode.Webview): string {
     <div class="navbar">  
         <div style="font-size: 32px; font-weight: 400"> Perplexity AI </div>
         <select name="Model" id="model-selector" required>
-            <option value="sonar">Sonar</option>
-            <option value="sonar-pro">Sonar-Pro</option>
-            <option value="sonar-reasoning">Sonar-Reasoning</option>
-            <option value="sonar-reasoning-pro">Sonar-Reasoning-Pro</option>
-
+        ${PerplexityModels.map(element => { 
+            console.log("Loaded model " + element); 
+            return '<option value=' + element + '>' + element + '</option>';
+        }).join('')}
         </select>
     </div> 
 
@@ -234,6 +236,12 @@ export default function getWebviewContent(webview: vscode.Webview): string {
             function removeThinkings(text) {
 
                 //The reasoning tokens are removed from the response text. Everything between <think> and </think> is a reasoning token returned by the model and we don't want the chat to be cluttered with them.
+            if (message.command === "stream") {
+                // Append streaming text safely
+                currentResponseText.innerText += message.content;
+            } else if (message.command === "complete") {
+                // Process final Markdown rendering
+                // Remove all returned reasononing tokens from the response as they take a lot tokens
                 const indexOfStartReasoningTokens = currentResponseText.innerText.indexOf("<think>");
                 const indexOfEndReasoningTokens = currentResponseText.innerText.indexOf("</think>");    
                 return text.slice(0, indexOfStartReasoningTokens) + text.slice(indexOfEndReasoningTokens + 8, text.length).trim();

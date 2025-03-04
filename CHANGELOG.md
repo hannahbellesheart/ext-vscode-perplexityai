@@ -4,6 +4,7 @@
 #### Changes
 - Modified user messages' style, now messages sent by the user are bigger and light blue
 - Added autoscrolling and blocked messaging while the AI is responding  
+- Added new model - sonar-deep-research
 
 ## v1.2.0
 #### Changes
