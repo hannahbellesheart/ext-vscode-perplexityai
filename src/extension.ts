@@ -14,7 +14,7 @@ export function activate(context: vscode.ExtensionContext) {
 			prompt: 'Enter your API key',
 			placeHolder: 'e.g. pplx-...1234',
 			title: 'Set API Key for Perplexity'
-		}).then(async (apiKey) => {
+		}).then(async (apiKey?: string) => {
 			if (apiKey) {
 				await context.secrets.store("perplexity-ext.apiKey", apiKey);
 			} else {
