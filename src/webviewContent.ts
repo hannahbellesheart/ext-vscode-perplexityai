@@ -1,6 +1,9 @@
 import * as vscode from 'vscode';
+import { PerplexityModels } from './util/models';
 
 export default function getWebviewContent(webview: vscode.Webview): string {
+
+
 
     function getNonce(): string {
         let nonce = '';
@@ -154,28 +157,36 @@ export default function getWebviewContent(webview: vscode.Webview): string {
                 justify-content: space-between; 
             }
 
+            .userMessage { 
+                color: #00fff7; 
+                font-size: 2rem; 
+                text-align: right;
+            }
+
         </style>
     </head>
     <body>
     <div class="navbar">  
         <div style="font-size: 32px; font-weight: 400"> Perplexity AI </div>
         <select name="Model" id="model-selector" required>
-            <option value="sonar">Sonar</option>
-            <option value="sonar-pro">Sonar-Pro</option>
-            <option value="sonar-reasoning">Sonar-Reasoning</option>
+        ${PerplexityModels.map(element => { 
+            console.log("Loaded model " + element); 
+            return '<option value=' + element + '>' + element + '</option>';
+        }).join('')}
         </select>
     </div> 
 
         <div id="sources">
         </div> 
         <div id="response-container">
+
             <div id="response-text" class="response-text">
             </div>
             <div id="current-message"> </div> 
         </div>
     
         <div class="input-container">
-            <textarea 
+            <textarea  
                 id="user-input" 
                 placeholder="Enter your code question... Hit Enter to send. Hit Shift + Enter to add another line"
                 spellcheck="false"
@@ -184,92 +195,120 @@ export default function getWebviewContent(webview: vscode.Webview): string {
         </div>
     
         <script nonce="${nonce}">
-        const md = window.markdownit({
-            breaks: true, 
-            linkify: true, 
-            typographer: true
-        });
-        const vscode = acquireVsCodeApi();
-        const input = document.getElementById('user-input');
-        let userPrompt = "";
-        const responseText = document.getElementById('response-text');
-        const currentResponseText = document.getElementById("current-message");
-        let cursorElement = null;
-        let responseTextMessageForContext = ""; 
-        // Handle input validation
 
+            // Markdown parser to render the response text 
+            const md = window.markdownit({
+                breaks: true, 
+                linkify: true, 
+                typographer: true,
+                html: true
+            });
+
+            const vscode = acquireVsCodeApi();
+            const input = document.getElementById('user-input');
+            let userPrompt = "", userPromptPrefixDiv = '\\n\\n<div class="userMessage" >', userPromptSuffixDiv = ' </div>\\n\\n';
+            const responseText = document.getElementById('response-text');
+            const currentResponseText = document.getElementById("current-message");
+            let cursorElement = null;
+            let responseTextMessageForContext = ""; 
         // Handle Enter key (Shift+Enter for newline)
         input.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                currentResponseText.innerText += "## $: " + input.value + '\\n';
+                currentResponseText.innerText += userPromptPrefixDiv + input.value + userPromptSuffixDiv;
                 userPrompt = input.value; 
                 sendMessage();
             }
         });
 
 
-        function sendContext(prompt, response) { 
-            vscode.postMessage({
-                command: "setContext", 
-                context: {
-                        role: "system", 
-                        content: "CONTEXT: USER PROMPT: " + prompt + " AI RESPONSE: " + response
-                },
-            })
-        }
-
-
-        window.addEventListener('message', event => {
-            const message = event.data;
-            let streamChunk = ""; 
-            const sourcesList = document.getElementById("sources");
-
-            if (message.command === "stream") {
-                // Append streaming text safely
-                currentResponseText.innerText += message.content;
-            } else if (message.command === "complete") {
-                // Process final Markdown rendering
-                responseTextMessageForContext = currentResponseText.innerText.trim();
-                currentResponseText.innerHTML =   md.render(currentResponseText.innerText)
-                responseText.insertAdjacentHTML('beforeend', currentResponseText.innerHTML);
-                currentResponseText.innerText = "";
-                currentResponseText.style.whiteSpace = 'pre-wrap';
-
-                sendContext(userPrompt, responseTextMessageForContext); 
-            } else if (message.command === "source") {
-                // Create new source element with Markdown parsing
-                const sourceItem = document.createElement('div');
-                sourceItem.innerHTML = md.render('- ' + message.content);
-                sourcesList.prepend(sourceItem);  // Add to top of sources list
-            }
-        });
-
-
-        // Send message to extension
-
-        function sendMessage() {
-            const message = input.value.trim();
-            if (message) {
+            // This function is called when the message is complete and we want to send the context back to the parent window for future messages
+            function sendContext(prompt, response) { 
                 vscode.postMessage({
-                    command: 'submit',
-                    content: message
-                });
-                input.value = '';
+                    command: "setContext",
+                    prompt: prompt,
+                    response: response 
+                })
             }
-        }
 
 
+            function removeThinkings(text) {
 
-        const dropdown = document.getElementById('model-selector');
-        dropdown.addEventListener('change', (e) => {
-            vscode.postMessage({
-                    command: 'selectModel',
-                    content: e.target.value
+                    //The reasoning tokens are removed from the response text. Everything between <think> and </think> is a reasoning token returned by the model and we don't want the chat to be cluttered with them.
+                    const indexOfStartReasoningTokens = currentResponseText.innerText.indexOf("<think>");
+                    const indexOfEndReasoningTokens = currentResponseText.innerText.indexOf("</think>");    
+                    return text.slice(0, indexOfStartReasoningTokens) + text.slice(indexOfEndReasoningTokens + 8, text.length).trim();
+                }
+
+            window.addEventListener('message', event => {
+                const message = event.data;
+                let streamChunk = ""; 
+                const sourcesList = document.getElementById("sources");
+
+                if (message.command === "stream") {
+                    // Append streaming text safely
+                    currentResponseText.innerText += message.content;
+
+                    //Scroll to the bottom of the response container
+                    const responseContainer = document.getElementById('response-container');
+                    responseContainer.scrollTop = responseText.scrollHeight;
+
+                } else if (message.command === "complete") {
+            
+                    // Remove the "thinking" tokens from the response text
+                    currentResponseText.innerText = removeThinkings(currentResponseText.innerText); 
+
+                    // Extract the user prompt from the response text 
+                    responseTextMessageForContext = currentResponseText.innerText.split(userPromptSuffixDiv)[1]; 
+                    
+                    // Render the final response text and remove the "current response" text
+                    currentResponseText.innerHTML =   md.render(currentResponseText.innerText)
+                    responseText.insertAdjacentHTML('beforeend', currentResponseText.innerHTML);
+                    currentResponseText.innerText = "";
+                    currentResponseText.style.whiteSpace = 'pre-wrap';
+
+                    // Send back the context (being just the users' prompt essentially) to the parent window. No need to send the response as it is already stored in the parent window
+                    sendContext(userPrompt, responseTextMessageForContext); 
+
+                    // Allow the user to type again 
+                    input.readOnly = false;
+
+                } else if (message.command === "source") {
+                    // Create new source element with Markdown parsing
+                    const sourceItem = document.createElement('div');
+                    sourceItem.innerHTML = md.render('- ' + message.content);
+                    sourcesList.prepend(sourceItem);  // Add to top of sources list
+                }
             });
-        });
 
-        //send errors to vscode
+
+            // Send message to extension
+
+            function sendMessage() {
+                const message = input.value.trim();
+                if (message) {
+                    
+                    input.readOnly = true;
+                    vscode.postMessage({
+                        command: 'submit',
+                        content: message
+                    });
+                    input.value = '';
+                }
+            }
+
+
+
+            // Send message to the parent window once the user selects a model
+            const dropdown = document.getElementById('model-selector');
+            dropdown.addEventListener('change', (e) => {
+                vscode.postMessage({
+                        command: 'selectModel',
+                        content: e.target.value
+                });
+            });
+
+            //send errors to vscode
 
         </script>
     </body>

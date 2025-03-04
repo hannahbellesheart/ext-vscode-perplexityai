@@ -25,10 +25,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	const disposableChatWindow = vscode.commands.registerCommand('perplexity-ext.openChatWindow', async () => {
 
-		let messageContext: PerplexityMessage[] = [{
-			role: "system", 
-			content: "Be precise and concise. The messages for context have a \"CONTEXT:\" at the begginning, from which the \"$\" represents the start of a user's prompt"
-		}];
+		let messageContext: PerplexityMessage[] = [];
 
 		let model = "sonar"; 
 
@@ -52,7 +49,9 @@ export function activate(context: vscode.ExtensionContext) {
 		panel.webview.onDidReceiveMessage(async (message: {
 			context: PerplexityMessage,
 			content: string, 
-			command: string
+			command: string, 
+			prompt?: string, 
+			response?: string
 		}) => {
 			if (!apiKey) {
 				vscode.window.showErrorMessage("API key not configured");
@@ -76,10 +75,29 @@ export function activate(context: vscode.ExtensionContext) {
 						console.error(message.content); 
 						break;
 					case "setContext": 
-						messageContext.push(message.context); 
-						if(messageContext.length > 10 ) {
+						// messageContext.push(message.context);
+						
+						// If we receive the setContext signal from the embedded window, we set the previous user prompt and assistant response in the message history 
+						console.log("Setting context: " + message.response);
+						const previousUserPrompt: PerplexityMessage = {
+							role: "user", 
+							content: message.prompt ?? "NO PROMPT"
+						};
+						
+						const previousAiResponse: PerplexityMessage = {
+							role: "assistant", 
+							content: message.response ?? "NO RESPONSE"
+						};
+						messageContext.push(previousUserPrompt); 
+						messageContext.push(previousAiResponse); 
+
+						// Add limit of 16 total messages to not use up too many tokens 
+
+						if(messageContext.length > 16) {
+							messageContext.shift(); 
 							messageContext.shift(); 
 						}
+
 						console.log(messageContext);
 				}
 			}

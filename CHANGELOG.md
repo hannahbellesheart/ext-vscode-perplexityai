@@ -1,4 +1,29 @@
 # Change Log
+
+## v1.3.2
+#### Bugfixes
+- Resolved a bug where the responses from the message context (or history) would dissapear and only previous user prompts would be stored
+
+## v1.3.1
+#### Changes
+- Modified user messages' style, now messages sent by the user are bigger and light blue
+- Added autoscrolling and blocked messaging while the AI is responding  
+- Added new model - sonar-deep-research
+#### Bugfixes
+- Resolved an issue from previous version that would mess up the whole webview functionality
+
+## v1.2.0
+#### Changes
+- Added message history of 16 (8 user messages and 8 responses) to save up tokens
+- Removed "thoughts" from the screen after the message is complete for better readability
+- Removed "thoughts" from previous messages to not waste AI tokens
+
+## v1.1.2
+#### Changes 
+- Added sonar-reasoning-pro model
+- Added the current context up to spec with Perplexity's API standards 
+#### Bugfixes
+- Resolved the bug in which the model wouldn't 'remember' context or would mix-up messages order 
 ## v1.1.0 
 #### Changes
 - Added message history context
