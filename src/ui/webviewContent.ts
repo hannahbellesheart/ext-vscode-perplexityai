@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { PerplexityModels } from './util/models';
+import { PerplexityModels } from '../util/models';
 
 export default function getWebviewContent(webview: vscode.Webview): string {
 

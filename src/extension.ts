@@ -1,9 +1,9 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-import getWebviewContent from './webviewContent';
-import sendMessageToPerplexity from './perplexity';
-import { PerplexityMessage } from './perplexity';
+import getWebviewContent from './ui/webviewContent';
+import sendMessageToPerplexity from './util/perplexity';
+import { PerplexityMessage } from './util/perplexity';
 export function activate(context: vscode.ExtensionContext) {
 
 
