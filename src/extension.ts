@@ -78,6 +78,7 @@ export function activate(context: vscode.ExtensionContext) {
 						// messageContext.push(message.context);
 						
 						// If we receive the setContext signal from the embedded window, we set the previous user prompt and assistant response in the message history 
+						console.log("Setting context: " + message.response);
 						const previousUserPrompt: PerplexityMessage = {
 							role: "user", 
 							content: message.prompt ?? "NO PROMPT"

@@ -1,5 +1,9 @@
 # Change Log
 
+## v1.3.2
+#### Bugfixes
+- Resolved a bug where the responses from the message context (or history) would dissapear and only previous user prompts would be stored
+
 ## v1.3.1
 #### Changes
 - Modified user messages' style, now messages sent by the user are bigger and light blue
