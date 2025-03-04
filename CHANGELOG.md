@@ -1,10 +1,12 @@
 # Change Log
 
-## v1.3.0
+## v1.3.1
 #### Changes
 - Modified user messages' style, now messages sent by the user are bigger and light blue
 - Added autoscrolling and blocked messaging while the AI is responding  
 - Added new model - sonar-deep-research
+#### Bugfixes
+- Resolved an issue from previous version that would mess up the whole webview functionality
 
 ## v1.2.0
 #### Changes
