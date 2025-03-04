@@ -1,8 +1,11 @@
 # Change Log
+
 ## v1.3.0
-#### Changes 
+#### Changes
+- Modified user messages' style, now messages sent by the user are bigger and light blue
+- Added autoscrolling and blocked messaging while the AI is responding  
 - Added new model - sonar-deep-research
-  
+
 ## v1.2.0
 #### Changes
 - Added message history of 16 (8 user messages and 8 responses) to save up tokens
