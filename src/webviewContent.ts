@@ -235,18 +235,11 @@ export default function getWebviewContent(webview: vscode.Webview): string {
 
             function removeThinkings(text) {
 
-                //The reasoning tokens are removed from the response text. Everything between <think> and </think> is a reasoning token returned by the model and we don't want the chat to be cluttered with them.
-            if (message.command === "stream") {
-                // Append streaming text safely
-                currentResponseText.innerText += message.content;
-            } else if (message.command === "complete") {
-                // Process final Markdown rendering
-                // Remove all returned reasononing tokens from the response as they take a lot tokens
-                const indexOfStartReasoningTokens = currentResponseText.innerText.indexOf("<think>");
-                const indexOfEndReasoningTokens = currentResponseText.innerText.indexOf("</think>");    
-                return text.slice(0, indexOfStartReasoningTokens) + text.slice(indexOfEndReasoningTokens + 8, text.length).trim();
-            }
-
+                    //The reasoning tokens are removed from the response text. Everything between <think> and </think> is a reasoning token returned by the model and we don't want the chat to be cluttered with them.
+                    const indexOfStartReasoningTokens = currentResponseText.innerText.indexOf("<think>");
+                    const indexOfEndReasoningTokens = currentResponseText.innerText.indexOf("</think>");    
+                    return text.slice(0, indexOfStartReasoningTokens) + text.slice(indexOfEndReasoningTokens + 8, text.length).trim();
+                }
 
             window.addEventListener('message', event => {
                 const message = event.data;
