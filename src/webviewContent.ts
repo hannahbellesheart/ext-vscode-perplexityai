@@ -255,11 +255,12 @@ export default function getWebviewContent(webview: vscode.Webview): string {
 
                 } else if (message.command === "complete") {
             
-                    // Extract the user prompt from the response text 
-                    responseTextMessageForContext = currentResponseText.innerText.split(userPromptSuffixDiv)[1]; 
-                    // Process final Markdown rendering
+                    // Remove the "thinking" tokens from the response text
                     currentResponseText.innerText = removeThinkings(currentResponseText.innerText); 
 
+                    // Extract the user prompt from the response text 
+                    responseTextMessageForContext = currentResponseText.innerText.split(userPromptSuffixDiv)[1]; 
+                    
                     // Render the final response text and remove the "current response" text
                     currentResponseText.innerHTML =   md.render(currentResponseText.innerText)
                     responseText.insertAdjacentHTML('beforeend', currentResponseText.innerHTML);
