@@ -1,8 +1,9 @@
 {
   "name": "perplexity-ext",
-  "displayName": "perplexity-ext",
+  "displayName": "Perplexity.ai",
   "description": "AI Integration for Perplexity.ai with VSCode",
-  "version": "1.3.2",
+  "icon": "images/icon.png",
+  "version": "1.3.3",
   "engines": {
     "vscode": "^1.96.0"
   },
