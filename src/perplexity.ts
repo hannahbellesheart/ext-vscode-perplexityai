@@ -73,6 +73,7 @@ export default async function sendMessageToPerplexity(
 						content: source
 					});
 				});
+				console.log("Processed response from Perplexity");
                 sendContentToInnerWebView({ command: 'complete' });
                 return; 
             }
