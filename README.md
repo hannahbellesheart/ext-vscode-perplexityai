@@ -13,11 +13,13 @@ Integrate Perplexity AI's API directly into VS Code with real-time chat capabili
 
 ## Installation
 
-I would suggest installing it from the "marketplace", but if you'd like to manually install it, please follow the below steps
+I would suggest installing it from the vscode marketplace, but if you'd like to manually install it, please follow the below steps
 
-```
-npm install 
-npx @vscode/vsce packge
+```bash
+$ git clone https://github.com/gabrielhutu/perplexity-ext 
+$ cd ./perplexity-ext
+$ npm install 
+$ npx @vscode/vsce packge
 ```
 
 After the above is completed, a vsix file should be generated in the root directory of this repository. 
@@ -32,13 +34,22 @@ For more details regarding how to generate an API key for Perplexity, please che
 
 ## Usage
 
+![Usage](https://raw.githubusercontent.com/gabrielhutu/perplexity-ext/refs/heads/master/images/usage.gif)
+
 ### 1. Open chat
 
-Open Command Palette → "Perplexity: Open Chat Window"
+Click on the Chat icon on the activity bar and hit "Open chat window" 
 
 ### 2. Select model from dropdown  
 
-On the top-right corner, there is a dropdown menu. the menu allows you to select which model would you like to use with Perplexity. The current available options are `sonar`, `sonar-pro` and `sonar-reasoning`
+On the left sidebar, there is a dropdown menu. the menu allows you to select which model would you like to use with Perplexity. The current available options are 
+- `sonar`
+- `sonar-pro`
+- `sonar-reasoning`
+- `sonar-reasoning-pro`
+- `sonar-deep-research`
+| r1-1776 is currently not supported
+
 For more details regarding how they work, please check their documentation.
 
 ### 3. Enter questions in chat input
@@ -49,31 +60,23 @@ Type in anything!
 
 Wait for the model to respond. It will stream every word to you, which is captured in the
 
-## Configuration
-
-Below is the only current command that allows configuration, which is essentially only the API token.
-
-```
-{  
-"command": "perplexity-ext.setAPIToken",  
-}
-```
-
 ## Architecture
 
 ```
  src/  
-├── extension.ts # Core logic  
-├── perplexity.ts # API communication 
-└── webviewContent.ts # UI components
+├── extension.ts        # Core logic   
+├── util/               # Directory for utility classes and object 
+│   ├── perplexity.ts   # API communication 
+│   ├── sidebar.ts      # Sidebar class 
+│   ├── util.js         # Util functions 
+│   └── models.js       # Currently just hosting 1 variable for all model types.
+│                         I'll possibly implement some way of fecthing the models automatically here.                             
+└── ui/ # UI Components 
+    ├── webviewContent.ts # component for the chat window 
+    └── webviewSidebar.ts # Component for the sidebar 
 ```
 
 ## Security - API keys encrypted via VS Code Secret Storage
 
 - CSP nonce protection for webviews
-
-## TODO
-
-- Add menu to select what files should be included in context
-- If possible, add counter for tokens to allow the end user to see how many tokens left.
-- Add chat history context 
+- Storage of sensitive data in vscode secret 
