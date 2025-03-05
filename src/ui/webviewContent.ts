@@ -1,20 +1,7 @@
 import * as vscode from 'vscode';
-import { PerplexityModels } from './util/models';
+import { getNonce } from '../util/utils';
 
 export default function getWebviewContent(webview: vscode.Webview): string {
-
-
-
-    function getNonce(): string {
-        let nonce = '';
-        const possible =
-            'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-
-        for (let i = 0; i < 32; i++) {
-            nonce += possible.charAt(Math.floor(Math.random() * possible.length));
-        }
-        return nonce;
-    }
 
     const nonce: string = getNonce();
 
@@ -116,18 +103,6 @@ export default function getWebviewContent(webview: vscode.Webview): string {
                 0%, 100% { opacity: 1; }
                 50% { opacity: 0; }
             }
-            select {
-                padding: 10px;
-                border: none;
-                border-radius: 4px;
-                width: 200px;
-                background-color: var(--vscode-input-background);
-                color: var(--vscode-editor-foreground); 
-            }
-
-            select:focus {
-                outline: none;
-            }
 
             #sources {
                 overflow: auto; 
@@ -149,14 +124,6 @@ export default function getWebviewContent(webview: vscode.Webview): string {
                 left: 0;
                 color: var(--vscode-editor-foreground);
             }
-
-            .navbar {
-                flex-direction: row; 
-                display: flex; 
-                gap: 20px;
-                justify-content: space-between; 
-            }
-
             .userMessage { 
                 color: #00fff7; 
                 font-size: 2rem; 
@@ -166,16 +133,6 @@ export default function getWebviewContent(webview: vscode.Webview): string {
         </style>
     </head>
     <body>
-    <div class="navbar">  
-        <div style="font-size: 32px; font-weight: 400"> Perplexity AI </div>
-        <select name="Model" id="model-selector" required>
-        ${PerplexityModels.map(element => { 
-            console.log("Loaded model " + element); 
-            return '<option value=' + element + '>' + element + '</option>';
-        }).join('')}
-        </select>
-    </div> 
-
         <div id="sources">
         </div> 
         <div id="response-container">
@@ -297,18 +254,6 @@ export default function getWebviewContent(webview: vscode.Webview): string {
                 }
             }
 
-
-
-            // Send message to the parent window once the user selects a model
-            const dropdown = document.getElementById('model-selector');
-            dropdown.addEventListener('change', (e) => {
-                vscode.postMessage({
-                        command: 'selectModel',
-                        content: e.target.value
-                });
-            });
-
-            //send errors to vscode
 
         </script>
     </body>
