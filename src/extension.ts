@@ -4,6 +4,9 @@ import * as vscode from 'vscode';
 import getWebviewContent from './ui/webviewContent';
 import sendMessageToPerplexity from './util/perplexity';
 import { PerplexityMessage } from './util/perplexity';
+
+import { Sidebar } from './util/sidebar';
+
 export function activate(context: vscode.ExtensionContext) {
 
 
@@ -27,7 +30,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 		let messageContext: PerplexityMessage[] = [];
 
-		let model = "sonar"; 
+		let model = "sonar";
 
 		const panel = vscode.window.createWebviewPanel(
 			'perplexity',
@@ -48,9 +51,9 @@ export function activate(context: vscode.ExtensionContext) {
 		// If the rendered page is sending a message, we check what type of message it is (In this case it can only be "submit") so we go ahead and call sendMessageToPerplexity in order to get the response from the API. 
 		panel.webview.onDidReceiveMessage(async (message: {
 			context: PerplexityMessage,
-			content: string, 
-			command: string, 
-			prompt?: string, 
+			content: string,
+			command: string,
+			prompt?: string,
 			response?: string
 		}) => {
 			if (!apiKey) {
@@ -59,43 +62,47 @@ export function activate(context: vscode.ExtensionContext) {
 				switch (message.command) {
 					case 'submit':
 						try {
-							await sendMessageToPerplexity(message.content, messageContext, model, apiKey, panel.webview.postMessage.bind(panel.webview));
+
+							// Using Sidebar.model because that's where the user sets the model they want to use, 
+							await sendMessageToPerplexity({
+								message: message.content,
+								context: messageContext,
+								model: Sidebar.model,
+								apiKey: apiKey,
+								sendContentToInnerWebView: panel.webview.postMessage.bind(panel.webview)
+							});
 						} catch (error) {
 							panel.webview.postMessage({
 								command: 'error',
 								error: (error as Error).message
 							});
 						}
-						break; 
-					case "selectModel": 
-						console.log("Selecting model: " + message.content); 
-						model = message.content; 
-						break; 
-					case "webviewError": 
-						console.error(message.content); 
 						break;
-					case "setContext": 
+					case "webviewError":
+						console.error(message.content);
+						break;
+					case "setContext":
 						// messageContext.push(message.context);
-						
+
 						// If we receive the setContext signal from the embedded window, we set the previous user prompt and assistant response in the message history 
 						console.log("Setting context: " + message.response);
 						const previousUserPrompt: PerplexityMessage = {
-							role: "user", 
+							role: "user",
 							content: message.prompt ?? "NO PROMPT"
 						};
-						
+
 						const previousAiResponse: PerplexityMessage = {
-							role: "assistant", 
+							role: "assistant",
 							content: message.response ?? "NO RESPONSE"
 						};
-						messageContext.push(previousUserPrompt); 
-						messageContext.push(previousAiResponse); 
+						messageContext.push(previousUserPrompt);
+						messageContext.push(previousAiResponse);
 
 						// Add limit of 16 total messages to not use up too many tokens 
 
-						if(messageContext.length > 16) {
-							messageContext.shift(); 
-							messageContext.shift(); 
+						if (messageContext.length > 16) {
+							messageContext.shift();
+							messageContext.shift();
 						}
 
 						console.log(messageContext);
@@ -107,6 +114,9 @@ export function activate(context: vscode.ExtensionContext) {
 
 		panel.webview.html = getWebviewContent(panel.webview);
 	});
+
+	const sideBarProvider = new Sidebar();
+	context.subscriptions.push(vscode.window.registerWebviewViewProvider(Sidebar.viewType, sideBarProvider));
 
 	context.subscriptions.push(disposableChatWindow);
 

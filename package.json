@@ -22,7 +22,25 @@
         "command": "perplexity-ext.setAPIToken",
         "title": "Perplexity: Set API Token"
       }
-    ]
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "perplexity-sidebar",
+          "title": "Perplexity",
+          "icon": "$(comment-discussion)"
+        }
+      ]
+    },
+    "views": {
+      "perplexity-sidebar": [
+        {
+          "type": "webview",
+          "id": "perplexityChatView",
+          "name": "AI Chat"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
