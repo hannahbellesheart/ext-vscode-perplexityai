@@ -14,13 +14,13 @@ export interface PerplexityMessage{
 
 
 
-export default async function sendMessageToPerplexity(
-	message: string,
-	context: PerplexityMessage[],
-	model: string, 
-	apiKey: string,
-	sendContentToInnerWebView: Function
-) {
+export default async function sendMessageToPerplexity({
+	message,
+	context,
+	model, 
+	apiKey,
+	sendContentToInnerWebView
+}: { message: string, context: PerplexityMessage[], model: string, apiKey: string, sendContentToInnerWebView: Function }) {
 
 	// request body for Perplexity
 	const requestBody: PerplexityRequest = {
@@ -125,11 +125,8 @@ export default async function sendMessageToPerplexity(
 
 
 
-	} catch (error) {
-		if (error instanceof DOMException && error.name === "AbortError") {
-			throw new Error("Request timed out after 60 seconds");
-		}
-		throw new Error(`Failed to complete request: ${(error as Error).message}`);
+	} catch (error: Error | any) {
+		throw new Error(`Failed to complete request: ${error?.message || "Unknown error" }`);
 	}
 }
 

@@ -2,8 +2,7 @@
   "name": "perplexity-ext",
   "displayName": "Perplexity.ai",
   "description": "AI Integration for Perplexity.ai with VSCode",
-  "icon": "images/icon.png",
-  "version": "1.3.3",
+  "version": "2.0.0",
   "engines": {
     "vscode": "^1.96.0"
   },
@@ -23,7 +22,25 @@
         "command": "perplexity-ext.setAPIToken",
         "title": "Perplexity: Set API Token"
       }
-    ]
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "perplexity-sidebar",
+          "title": "Perplexity",
+          "icon": "$(comment-discussion)"
+        }
+      ]
+    },
+    "views": {
+      "perplexity-sidebar": [
+        {
+          "type": "webview",
+          "id": "perplexityChatView",
+          "name": "AI Chat"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
