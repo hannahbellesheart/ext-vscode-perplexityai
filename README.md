@@ -22,38 +22,31 @@ $ npm install
 $ npx @vscode/vsce packge
 ```
 
-After the above is completed, a vsix file should be generated in the root directory of this repository. 
-Please install the vsix file by following these steps:
+After the above is completed, the VS Code extension will be packaged in a `.vsix` file in the root directory of this repository. 
+To install a vsix manually (ie... not from the Extensions menu within VSCode, and not from the VSCode Marketplace),
 
-## [Install from a VSIX](https://code.visualstudio.com/docs/configure/extensions/extension-marketplace#_install-from-a-vsix)
-
-You can manually install a VS Code extension packaged in a `.vsix` file. 
-Using the **Install from VSIX** command in the Extensions view command dropdown, 
-or the **Extensions: Install from VSIX** command in the **Command Palette**, point 
+Use the **Install from VSIX** command in the Extensions view command dropdown, 
+or the **Extensions: Install from VSIX** command in the **Command Palette**, and point 
 to the `.vsix` file.
 
-You can also install using the VS Code `--install-extension` command-line switch, 
+You can also install using the VS Code command, `code`, 
+followed by a space, and then the command-line switch `--install-extension`, 
 providing the path to the `.vsix` file.
 
->code --install-extension myextension.vsix
+### Example (single extension)
+>code --install-extension `c:\docuents\extensions\myExtension01.vsix`
+### Example (multiple extensions) (**)
+>code --install-extension `c:\docuents\extensions\myExtension01.vsix`  --install-extension `c:\docuents\extensions\myExtension02.vsix`
 
-`code --install-extension myextension.vsix`
+(**) You may provide the `--install-extension` multiple times on the command line to install multiple extensions at once.
 
-```
-<span class="line"><span style="--shiki-dark:#DCDCAA;--shiki-light:#795E26">code</span><span style="--shiki-dark:#569CD6;--shiki-light:#0000FF"> --install-extension</span><span style="--shiki-dark:#CE9178;--shiki-light:#A31515"> myextension.vsix</span></span>
-<span class="line"></span>
-```
+>Note
+>
+>When you install an extension via VSIX, 
+>[auto update](https://code.visualstudio.com/docs/configure/extensions/extension-marketplace#_extension-auto-update) 
+>for that extension is disabled by default.
 
-You may provide the `--install-extension` multiple times on the command line to install multiple extensions at once.
-
-Note
-
-When you install an extension via VSIX, [auto update](https://code.visualstudio.com/docs/configure/extensions/extension-marketplace#_extension-auto-update) for that extension is disabled by default.
-
-
-
-outlined [here](https://code.visualstudio.com/docs/editor/extension-marketplace).  
-
+**[See here for more details](https://code.visualstudio.com/docs/configure/extensions/extension-marketplace#_install-from-a-vsix)
 
 ## Set API key
 
